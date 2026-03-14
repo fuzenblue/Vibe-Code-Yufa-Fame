@@ -1,0 +1,11 @@
+You are an Apache Airflow expert. Write a Python function called ingest_happiness_data(**context) for use as a PythonOperator callable.
+
+The function should:
+1. Download the World Happiness Report CSV files (2019 and 2020) from these public GitHub URLs:
+- 2019: https://raw.githubusercontent.com/rashida048/Datasets/master/world_happiness_report_2019.csv
+- 2020: https://raw.githubusercontent.com/rashida048/Datasets/master/world_happiness_report_2020.csv
+2. Save each as /tmp/happiness_2019.csv and /tmp/happiness_2020.csv
+3. Validate that each file contains at least 100 rows and key columns (Country or Country name, Score or Ladder score)
+4. Log the column names found in each file (they differ across years)
+5. Push a dict mapping year -> file_path to XCom
+6. Handle download errors with a 3-retry loop
