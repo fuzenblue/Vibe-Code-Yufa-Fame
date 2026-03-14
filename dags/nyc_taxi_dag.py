@@ -17,7 +17,7 @@ sys.path.insert(0, "/opt/airflow/pipelines/nyc-taxi-trips-pipeline/code")
 from ingest_taxi_data import ingest_taxi_data
 from clean_taxi_data import clean_taxi_data
 from transform_taxi_data import transform_taxi_data
-# from load_taxi_model import load_taxi_model
+from load_taxi_model import load_taxi_model
 
 default_args = {
     "owner": "vibe-coder",
@@ -53,10 +53,9 @@ with DAG(
         python_callable=transform_taxi_data,
     )
 
-    # t4_load = PythonOperator(
-    #     task_id="load_taxi_model",
-    #     python_callable=load_taxi_model,
-    # )
+    t4_load = PythonOperator(
+        task_id="load_taxi_model",
+        python_callable=load_taxi_model,
+    )
 
-    t1_ingest >> t2_clean >> t3_transform 
-    # >> t4_load
+    t1_ingest >> t2_clean >> t3_transform >> t4_load
