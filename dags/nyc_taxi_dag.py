@@ -14,10 +14,17 @@ from airflow.operators.python import PythonOperator
 # Add pipeline code directory to Python path
 sys.path.insert(0, "/opt/airflow/pipelines/nyc-taxi-trips-pipeline/code")
 
+<<<<<<< HEAD
 from ingest_taxi_data import ingest_taxi_data
 from clean_taxi_data import clean_taxi_data
 from transform_taxi_data import transform_taxi_data
 from load_taxi_model import load_taxi_model
+=======
+from ingest_taxi_data import ingest_taxi_data # ingest raw data from API
+from clean_taxi_data import clean_taxi_data # clean raw data
+# from transform_taxi_data import transform_taxi_data
+# from load_taxi_model import load_taxi_model
+>>>>>>> parent of 22ec85e (feat: Add transformation logic for NYC taxi data and implement prompt for function requirements)
 
 default_args = {
     "owner": "vibe-coder",
@@ -48,14 +55,19 @@ with DAG(
         python_callable=clean_taxi_data,
     )
 
-    t3_transform = PythonOperator(
-        task_id="transform_taxi_data",
-        python_callable=transform_taxi_data,
-    )
+    # t3_transform = PythonOperator(
+    #     task_id="transform_taxi_data",
+    #     python_callable=transform_taxi_data,
+    # )
 
     t4_load = PythonOperator(
         task_id="load_taxi_model",
         python_callable=load_taxi_model,
     )
 
+<<<<<<< HEAD
     t1_ingest >> t2_clean >> t3_transform >> t4_load
+=======
+    t1_ingest >> t2_clean 
+    # >> t3_transform >> t4_load
+>>>>>>> parent of 22ec85e (feat: Add transformation logic for NYC taxi data and implement prompt for function requirements)
