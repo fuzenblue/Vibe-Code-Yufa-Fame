@@ -16,7 +16,7 @@ sys.path.insert(0, "/opt/airflow/pipelines/nyc-taxi-trips-pipeline/code")
 
 from ingest_taxi_data import ingest_taxi_data # ingest raw data from API
 from clean_taxi_data import clean_taxi_data # clean raw data
-from transform_taxi_data import transform_taxi_data # transform cleaned data to star-schema format
+from transform_taxi_data import transform_taxi_data # transform cleaned data
 # from load_taxi_model import load_taxi_model
 
 default_args = {
