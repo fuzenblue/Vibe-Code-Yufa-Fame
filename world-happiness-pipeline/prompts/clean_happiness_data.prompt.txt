@@ -1,0 +1,12 @@
+You are an Apache Airflow expert. Write a Python function called clean_happiness_data(**context) for a PythonOperator.
+
+The function should:
+1. Pull combined CSV path from XCom (key="combined_path")
+2. Load and apply these cleaning operations:
+- Remove rows where happiness_score is null or outside range 0–10
+- Standardize country names: strip whitespace, title-case
+- Flag and remove statistical outliers using IQR method on happiness_score (rows below Q1-1.5*IQR or above Q3+1.5*IQR)
+- Fill missing GDP/social/freedom values with the median of the same year
+- Remove duplicate (country, year) pairs, keeping the first
+3. Log how many rows were dropped in each step
+4. Save to /tmp/happiness_clean.csv and push path to XCom

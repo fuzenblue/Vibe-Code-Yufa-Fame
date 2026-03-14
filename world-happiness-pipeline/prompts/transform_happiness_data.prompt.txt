@@ -1,0 +1,12 @@
+You are an Apache Airflow expert. Write a Python function called transform_happiness_data(**context) for a PythonOperator.
+
+The function should:
+1. Pull the file_map dict from XCom (task_id="ingest_happiness_data")
+2. Load each year's CSV, normalizing these column name differences:
+- Country column: "Country or region" (2019) vs "Country name" (2020) → normalize to "country"
+- Score column: "Score" (2019) vs "Ladder score" (2020) → normalize to "happiness_score"
+- Also normalize: GDP per capita, Social support, Healthy life expectancy, Freedom to make choices, Generosity, Perceptions of corruption
+3. Add a "year" column to each dataframe
+4. Concatenate all years into a single dataframe
+5. Save to /tmp/happiness_combined.csv
+6. Log the shape and first 3 rows
