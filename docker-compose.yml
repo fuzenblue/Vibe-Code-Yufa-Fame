@@ -1,0 +1,164 @@
+# ============================================================
+# Vibe-Code-Examples: Docker Compose for Airflow + MySQL
+# ============================================================
+# Services:
+#   1. postgres     - Airflow metadata database
+#   2. mysql        - Target database for pipeline data loading
+#   3. airflow-init - Initialize Airflow DB + create admin user
+#   4. airflow-webserver - Airflow Web UI (port 8080)
+#   5. airflow-scheduler - Runs and schedules DAGs
+# ============================================================
+#
+# Usage:
+#   docker compose up airflow-init    # First time only
+#   docker compose up -d              # Start all services
+#   Open http://localhost:8080        # Login: airflow / airflow
+#
+# ============================================================
+
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+    AIRFLOW__WEBSERVER__RBAC: 'true'
+    # MySQL connection variables for pipeline load steps
+    AIRFLOW_VAR_MYSQL_HOST: mysql
+    AIRFLOW_VAR_MYSQL_USER: pipeline
+    AIRFLOW_VAR_MYSQL_PASS: pipeline_pass
+    AIRFLOW_VAR_MYSQL_DB: pipeline_data
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./nyc-taxi-trips-pipeline:/opt/airflow/pipelines/nyc-taxi-trips-pipeline
+    - ./covid-19-stats-pipeline:/opt/airflow/pipelines/covid-19-stats-pipeline
+    - ./world-happiness-pipeline:/opt/airflow/pipelines/world-happiness-pipeline
+    - airflow-logs:/opt/airflow/logs
+  depends_on: &airflow-common-depends-on
+    postgres:
+      condition: service_healthy
+    mysql:
+      condition: service_healthy
+
+services:
+  # ----------------------------------------------------------
+  # PostgreSQL — Airflow metadata database
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: vibe-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ----------------------------------------------------------
+  # MySQL — Target database for pipeline data loading
+  # ----------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: vibe-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pass
+      MYSQL_DATABASE: pipeline_data
+      MYSQL_USER: pipeline
+      MYSQL_PASSWORD: pipeline_pass
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "pipeline", "-ppipeline_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # ----------------------------------------------------------
+  # Airflow Init — Initialize DB + create admin user
+  # ----------------------------------------------------------
+  airflow-init:
+    <<: *airflow-common
+    container_name: vibe-airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username airflow \
+          --password airflow \
+          --firstname Vibe \
+          --lastname Coder \
+          --role Admin \
+          --email admin@vibe-code.local
+        echo "✅ Airflow initialized successfully!"
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ----------------------------------------------------------
+  # Airflow Webserver — Web UI on port 8080
+  # ----------------------------------------------------------
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: vibe-airflow-webserver
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # ----------------------------------------------------------
+  # Airflow Scheduler — Executes and schedules DAGs
+  # ----------------------------------------------------------
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: vibe-airflow-scheduler
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "$(hostname)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-data:
+  mysql-data:
+  airflow-logs:

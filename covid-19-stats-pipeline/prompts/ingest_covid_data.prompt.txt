@@ -1,0 +1,10 @@
+You are an Apache Airflow expert. Write a Python function called ingest_covid_data(**context) for a PythonOperator.
+
+The function should:
+1. Download the Our World in Data COVID-19 dataset CSV from:
+https://covid.ourworldindata.org/data/owid-covid-data.csv
+2. Use requests with streaming to handle the large file (~100MB)
+3. Save to /tmp/covid_raw.csv
+4. Validate: confirm columns exist: iso_code, location, date, total_cases, new_cases, total_deaths, new_deaths, population
+5. Log unique country count, date range, and total row count
+6. Push file path to XCom
