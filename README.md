@@ -2,6 +2,16 @@
 
 A collection of **Apache Airflow data pipeline** examples built using the **"Vibe Coding"** approach: write prompts first, let AI generate the code.
 
+# Branch Name
+    feature/transform-load-nyc-taxi
+    feature/transform-load-covid-stats
+    feature/transform-load-world-happiness
+
+# สร้าง branch 
+    git checkout main # check
+    git pull origin main # ออก
+    git checkout -b fix/ingest-rewrite # สร้าง branch
+
 ## 📂 Project Structure
 
 ```
