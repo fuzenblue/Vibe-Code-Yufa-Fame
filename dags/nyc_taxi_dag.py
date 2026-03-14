@@ -60,4 +60,3 @@ with DAG(
 
     t1_ingest >> t2_clean >> t3_transform
     # >> t4_load
-    
