@@ -23,7 +23,7 @@ x-airflow-common: &airflow-common
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__FERNET_KEY: 'ZmRza2p2YmtkZmp2bjM0NTM0NW5iZmRzYmZkczM0NTU='
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
@@ -33,6 +33,7 @@ x-airflow-common: &airflow-common
     AIRFLOW_VAR_MYSQL_USER: pipeline
     AIRFLOW_VAR_MYSQL_PASS: pipeline_pass
     AIRFLOW_VAR_MYSQL_DB: pipeline_data
+    _PIP_ADDITIONAL_DEPENDENCIES: ''
   volumes:
     - ./dags:/opt/airflow/dags
     - ./nyc-taxi-trips-pipeline:/opt/airflow/pipelines/nyc-taxi-trips-pipeline
@@ -147,7 +148,7 @@ services:
     container_name: vibe-airflow-scheduler
     command: scheduler
     healthcheck:
-      test: ["CMD", "airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "$(hostname)"]
+      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob --hostname \"$$(hostname)\""]
       interval: 30s
       timeout: 10s
       retries: 5
